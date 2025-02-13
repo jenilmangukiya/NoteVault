@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import AuthModal from "./auth/AuthModal";
+import { useNavigate } from "react-router-dom";
 import NoteGrid from "./notes/NoteGrid";
 import NoteEditorModal from "./notes/NoteEditorModal";
 import PasswordPromptModal from "./notes/PasswordPromptModal";
@@ -22,7 +22,7 @@ const Home = ({
   onLogin = () => {},
   onRegister = () => {},
 }: HomeProps) => {
-  const [showAuthModal, setShowAuthModal] = React.useState(!isAuthenticated);
+  const navigate = useNavigate();
   const [showNoteEditor, setShowNoteEditor] = React.useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
   const [selectedNoteId, setSelectedNoteId] = React.useState<string | null>(
@@ -79,7 +79,7 @@ const Home = ({
               Create and manage your notes with password protection. Login or
               register to get started.
             </p>
-            <Button onClick={() => setShowAuthModal(true)}>
+            <Button onClick={() => navigate("/login")}>
               Login or Register
             </Button>
           </div>
@@ -87,12 +87,6 @@ const Home = ({
       </main>
 
       {/* Modals */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onLogin={onLogin}
-        onRegister={onRegister}
-      />
 
       <NoteEditorModal
         open={showNoteEditor}
