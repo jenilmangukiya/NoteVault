@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import useListNotes from "@/services/notes/useListNotes";
 
 interface LoginFormData {
   email: string;

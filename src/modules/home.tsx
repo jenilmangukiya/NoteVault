@@ -9,14 +9,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
 import { encryptNote } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Home = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [noteDetails, setNoteDetails] = useState(null);
   const { isAuthenticated, user } = useAuth();
   const [showNoteEditor, setShowNoteEditor] = React.useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [password, setPassword] = useState(null);
 
@@ -57,6 +61,7 @@ const Home = () => {
           })
           .eq("id", noteId);
         if (!result.error) {
+          queryClient.invalidateQueries({ queryKey: ["notesList"] });
           toast({
             title: "Success",
             description: "Note Updated successfully",
@@ -80,6 +85,7 @@ const Home = () => {
           },
         ]);
         if (!result.error) {
+          queryClient.invalidateQueries({ queryKey: ["notesList"] });
           toast({
             title: "Success",
             description: "Note Created successfully",
@@ -100,7 +106,7 @@ const Home = () => {
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-foreground">Notes App</h1>
+          <h1 className="text-2xl font-bold text-foreground">NoteVault</h1>
           {isAuthenticated && (
             <div className="flex gap-2">
               <Button
@@ -118,23 +124,32 @@ const Home = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 pb-0 flex justify-start">
-        <Button
-          onClick={() => {
-            setPassword(null);
-            setNoteDetails(null);
-            setShowNoteEditor(true);
-          }}
-          className="flex items-center gap-2 mx-6 "
-        >
-          <Plus className="h-4 w-4" />
-          Add New Note
-        </Button>
-      </div>
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        <div className=" flex justify-between mr-8 ml-8">
+          <Input
+            type="text"
+            placeholder="Search..."
+            className="w-[300px]"
+            value={searchText}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+            }}
+          />
+          <Button
+            onClick={() => {
+              setPassword(null);
+              setNoteDetails(null);
+              setShowNoteEditor(true);
+            }}
+            className="flex items-center gap-2 mr-12"
+          >
+            <Plus className="h-4 w-4" />
+            Add New Note
+          </Button>
+        </div>
         {isAuthenticated ? (
-          <NoteGrid onNoteClick={handleNoteClick} />
+          <NoteGrid onNoteClick={handleNoteClick} searchText={searchText} />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">

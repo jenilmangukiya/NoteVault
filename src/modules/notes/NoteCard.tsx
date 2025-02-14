@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { cx } from "class-variance-authority";
 
 interface NoteCardProps {
   title?: string;
@@ -20,11 +21,12 @@ const NoteCard = ({
   onClick = () => {},
   className,
 }: NoteCardProps) => {
+  const dateObj = new Date(date);
   return (
     <Card
       className={cn(
         "w-[380px] h-[220px] cursor-pointer transition-all duration-200 hover:shadow-lg bg-background",
-        className,
+        className
       )}
       onClick={onClick}
     >
@@ -37,10 +39,19 @@ const NoteCard = ({
             <Lock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           )}
         </div>
-        <p className="text-muted-foreground line-clamp-4">{content}</p>
+        <p
+          className={cx(
+            "text-muted-foreground line-clamp-3 text-ellipsis h-[70px]",
+            isPrivate ? "blur-[3px]" : "blur-[0px]"
+          )}
+        >
+          {content}
+        </p>
       </CardContent>
       <CardFooter className="px-6 py-4 border-t">
-        <p className="text-sm text-muted-foreground">{date}</p>
+        <p className="text-sm text-muted-foreground">
+          {dateObj.toLocaleString()}
+        </p>
       </CardFooter>
     </Card>
   );

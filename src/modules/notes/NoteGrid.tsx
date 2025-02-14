@@ -3,6 +3,15 @@ import NoteCard from "./NoteCard";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
+import useListNotes from "@/services/notes/useListNotes";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Note {
   id: string;
@@ -15,6 +24,7 @@ interface Note {
 interface NoteGridProps {
   notes?: Note[];
   onNoteClick?: (noteId: string) => void;
+  searchText: string;
 }
 
 const defaultNotes: Note[] = [
@@ -43,23 +53,14 @@ const defaultNotes: Note[] = [
   },
 ];
 
-const NoteGrid = ({ onNoteClick = () => {} }: NoteGridProps) => {
-  const [notes, setNotes] = useState([]);
+const NoteGrid = ({ onNoteClick = () => {}, searchText }: NoteGridProps) => {
   const { user } = useAuth();
-
-  useEffect(() => {
-    const fetchNotes = async () => {
-      const notesResult = await supabase
-        .from("notes")
-        .select()
-        .eq("userId", user.id);
-
-      if (!notesResult.error) {
-        setNotes(notesResult.data);
-      }
-    };
-    fetchNotes();
-  }, []);
+  const [page, setPage] = useState(1);
+  const { data, isLoading, error } = useListNotes({
+    userId: user.id,
+    page: page - 1,
+    searchText,
+  });
 
   return (
     <div className="w-full min-h-screen bg-background p-6">
@@ -69,24 +70,59 @@ const NoteGrid = ({ onNoteClick = () => {} }: NoteGridProps) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {notes.map((note) => (
-          <motion.div
-            key={note.id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <NoteCard
-              title={note.title}
-              content={note.content}
-              date={note.date}
-              isPrivate={note.isPrivate}
-              onClick={() => onNoteClick(note)}
-            />
-          </motion.div>
-        ))}
+        {!isLoading &&
+          data?.notes?.map((note) => (
+            <motion.div
+              key={note.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <NoteCard
+                title={note.title}
+                content={
+                  note.isprivate
+                    ? "Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum totam repudiandae suscipit iusto aspernatur eaque nihil consequatur soluta tempore a."
+                    : note.description
+                }
+                date={note.created_at}
+                isPrivate={note.isprivate}
+                onClick={() => onNoteClick(note)}
+              />
+            </motion.div>
+          ))}
       </motion.div>
+
+      {/* Pagination Controls */}
+      {!isLoading && data?.count > 1 && (
+        <Pagination className="mt-6">
+          <PaginationContent>
+            {page > 1 && (
+              <PaginationItem>
+                <PaginationPrevious onClick={() => setPage(page - 1)} />
+              </PaginationItem>
+            )}
+
+            {Array.from({ length: data?.count }, (_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={i + 1 === page}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            {page < data?.count && (
+              <PaginationItem>
+                <PaginationNext onClick={() => setPage(page + 1)} />
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };
