@@ -12,6 +12,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 
 interface Note {
   id: string;
@@ -25,6 +26,7 @@ interface NoteGridProps {
   notes?: Note[];
   onNoteClick?: (noteId: string) => void;
   searchText: string;
+  handleNewNoteButton: () => void;
 }
 
 const defaultNotes: Note[] = [
@@ -53,7 +55,11 @@ const defaultNotes: Note[] = [
   },
 ];
 
-const NoteGrid = ({ onNoteClick = () => {}, searchText }: NoteGridProps) => {
+const NoteGrid = ({
+  onNoteClick = () => {},
+  searchText,
+  handleNewNoteButton,
+}: NoteGridProps) => {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useListNotes({
@@ -64,6 +70,22 @@ const NoteGrid = ({ onNoteClick = () => {}, searchText }: NoteGridProps) => {
 
   return (
     <div className="w-full min-h-screen bg-background p-6">
+      {!isLoading && data?.notes?.length === 0 ? (
+        <motion.div
+          className="flex flex-col items-center justify-center h-64 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <p className="text-lg text-muted-foreground">No notes found</p>
+          <Button className="mt-4" onClick={handleNewNoteButton}>
+            Create New Note
+          </Button>
+        </motion.div>
+      ) : (
+        <></>
+      )}
+
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         initial={{ opacity: 0 }}

@@ -101,6 +101,11 @@ const Home = () => {
     }
   };
 
+  const handleNewNoteButton = () => {
+    setPassword(null);
+    setNoteDetails(null);
+    setShowNoteEditor(true);
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -137,11 +142,7 @@ const Home = () => {
             }}
           />
           <Button
-            onClick={() => {
-              setPassword(null);
-              setNoteDetails(null);
-              setShowNoteEditor(true);
-            }}
+            onClick={handleNewNoteButton}
             className="flex items-center gap-2 mr-12"
           >
             <Plus className="h-4 w-4" />
@@ -149,7 +150,11 @@ const Home = () => {
           </Button>
         </div>
         {isAuthenticated ? (
-          <NoteGrid onNoteClick={handleNoteClick} searchText={searchText} />
+          <NoteGrid
+            onNoteClick={handleNoteClick}
+            searchText={searchText}
+            handleNewNoteButton={handleNewNoteButton}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">
