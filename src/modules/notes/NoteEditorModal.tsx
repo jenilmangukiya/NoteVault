@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,37 +12,61 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Lock } from "lucide-react";
+import { decryptNote } from "@/lib/utils";
 
 interface NoteEditorModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  isEdit: boolean;
   onSave?: (note: {
     title: string;
     content: string;
     isPrivate: boolean;
     password?: string;
+    isEdit?: boolean;
+    noteId?: string;
   }) => void;
   defaultValues?: {
     title?: string;
     content?: string;
     isPrivate?: boolean;
+    password?: string;
   };
+  noteId?: string;
 }
 
 const NoteEditorModal = ({
   open = true,
   onOpenChange = () => {},
   onSave = () => {},
+  isEdit = false,
   defaultValues = {
     title: "",
     content: "",
     isPrivate: false,
   },
+  noteId = "",
 }: NoteEditorModalProps) => {
   const [title, setTitle] = React.useState(defaultValues.title);
   const [content, setContent] = React.useState(defaultValues.content);
   const [isPrivate, setIsPrivate] = React.useState(defaultValues.isPrivate);
-  const [password, setPassword] = React.useState("");
+  const [password, setPassword] = React.useState(defaultValues.password);
+  console.log("content", content);
+  useEffect(() => {
+    setTitle(defaultValues.title);
+    setIsPrivate(defaultValues.isPrivate);
+    setContent(
+      defaultValues.isPrivate
+        ? decryptNote(defaultValues.content, defaultValues?.password || "")
+        : defaultValues.content
+    );
+    setPassword(defaultValues.password);
+  }, [
+    defaultValues?.content,
+    defaultValues?.isPrivate,
+    defaultValues?.title,
+    defaultValues?.password,
+  ]);
 
   const handleSave = () => {
     onSave({
@@ -50,6 +74,8 @@ const NoteEditorModal = ({
       content: content || "",
       isPrivate,
       password: isPrivate ? password : undefined,
+      isEdit: isEdit,
+      noteId: noteId,
     });
     onOpenChange(false);
   };
@@ -58,7 +84,7 @@ const NoteEditorModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] bg-background">
         <DialogHeader>
-          <DialogTitle>Create New Note</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Note" : "Create New Note"}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -115,7 +141,9 @@ const NoteEditorModal = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Note</Button>
+          <Button onClick={handleSave}>
+            {isEdit ? "Update Note" : "Save Note"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

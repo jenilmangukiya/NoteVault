@@ -20,7 +20,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormData {
   email: string;
@@ -33,6 +38,11 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
+
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -41,9 +51,38 @@ export default function LoginPage() {
     },
   });
 
-  const onLogin = (data: LoginFormData) => {
-    console.log("Login data:", data);
+  const onLogin = async (formData: LoginFormData) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+      toast({
+        title: "Success",
+        description: "User Authenticated",
+      });
+      login(data?.user);
+      navigate("/");
+    } catch (error) {
+      console.log("Error in logout: ", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -85,7 +124,8 @@ export default function LoginPage() {
               />
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
               <p className="text-sm text-muted-foreground text-center">

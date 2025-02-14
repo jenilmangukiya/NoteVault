@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import NoteCard from "./NoteCard";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Note {
   id: string;
@@ -41,10 +43,24 @@ const defaultNotes: Note[] = [
   },
 ];
 
-const NoteGrid = ({
-  notes = defaultNotes,
-  onNoteClick = () => {},
-}: NoteGridProps) => {
+const NoteGrid = ({ onNoteClick = () => {} }: NoteGridProps) => {
+  const [notes, setNotes] = useState([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      const notesResult = await supabase
+        .from("notes")
+        .select()
+        .eq("userId", user.id);
+
+      if (!notesResult.error) {
+        setNotes(notesResult.data);
+      }
+    };
+    fetchNotes();
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-background p-6">
       <motion.div
@@ -66,7 +82,7 @@ const NoteGrid = ({
               content={note.content}
               date={note.date}
               isPrivate={note.isPrivate}
-              onClick={() => onNoteClick(note.id)}
+              onClick={() => onNoteClick(note)}
             />
           </motion.div>
         ))}

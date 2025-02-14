@@ -20,7 +20,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 interface RegisterFormData {
   username: string;
@@ -31,7 +36,6 @@ interface RegisterFormData {
 
 const registerSchema = z
   .object({
-    username: z.string().min(3, "Username must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
@@ -42,19 +46,51 @@ const registerSchema = z
   });
 
 export default function RegisterPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const onRegister = (data: RegisterFormData) => {
-    console.log("Register data:", data);
+  const onRegister = async (formData: RegisterFormData) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        throw new Error(error.message);
+      }
+      toast({
+        title: "Success",
+        description: "User successfully registered",
+      });
+      navigate("/login");
+    } catch (error) {
+      console.log("Error in Registeration: ", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -68,19 +104,6 @@ export default function RegisterPage() {
         <Form {...registerForm}>
           <form onSubmit={registerForm.handleSubmit(onRegister)}>
             <CardContent className="space-y-4">
-              <FormField
-                control={registerForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={registerForm.control}
                 name="email"
@@ -122,7 +145,8 @@ export default function RegisterPage() {
               />
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Register
               </Button>
               <p className="text-sm text-muted-foreground text-center">
