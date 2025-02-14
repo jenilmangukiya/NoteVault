@@ -149,6 +149,19 @@ export default function RegisterPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Register
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full flex items-center gap-2 border-gray-300 hover:bg-gray-100"
+                disabled={isLoading}
+                onClick={async () => {
+                  await supabase.auth.signInWithOAuth({ provider: "google" });
+                }}
+              >
+                <img src="/google.svg" width={24} height={24} />
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Regsiter with Google
+              </Button>
               <p className="text-sm text-muted-foreground text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary hover:underline">
